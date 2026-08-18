@@ -41,6 +41,7 @@ class AppController extends ChangeNotifier {
   bool soundEnabled = true;
   bool musicEnabled = true;
   bool debugMode = false;
+  bool darkMode = true;
 
   PuzzleEngine? engine;
   GameTimerController? timer;
@@ -78,6 +79,7 @@ class AppController extends ChangeNotifier {
     soundEnabled = data.soundEnabled;
     musicEnabled = data.musicEnabled;
     debugMode = data.debugMode;
+    darkMode = data.darkMode;
     ready = true;
     notifyListeners();
   }
@@ -263,6 +265,12 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> toggleDarkMode() async {
+    darkMode = !darkMode;
+    await _persist();
+    notifyListeners();
+  }
+
   Future<String?> addImageToStage(int level, int stage) async {
     final current = config.stage(level, stage);
     if (current.images.length >= GridValidation.maxImagesPerStage) {
@@ -385,6 +393,7 @@ class AppController extends ChangeNotifier {
         soundEnabled: soundEnabled,
         musicEnabled: musicEnabled,
         debugMode: debugMode,
+        darkMode: darkMode,
         activeSnapshot: clearSnapshot ? null : _snapshotOrNull(),
       ),
     );
