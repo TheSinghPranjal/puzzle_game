@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/theme/app_theme.dart';
+import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/screens/content_screen.dart';
 import 'package:puzzle_match/ui/screens/how_to_play_screen.dart';
 
@@ -36,16 +37,12 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.photo_library_rounded),
             title: const Text('Game content'),
             subtitle: const Text('Levels, grids, and image pools'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ContentScreen()),
-            ),
+            onTap: () => AppMotion.open(context, const ContentScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.help_outline_rounded),
             title: const Text('How to play'),
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const HowToPlayScreen()),
-            ),
+            onTap: () => AppMotion.open(context, const HowToPlayScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.restart_alt_rounded),
