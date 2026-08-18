@@ -6,6 +6,7 @@ import 'package:puzzle_match/models/puzzle_snapshot.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/theme/app_theme.dart';
 import 'package:puzzle_match/ui/motion.dart';
+import 'package:puzzle_match/ui/widgets/completion_overlay.dart';
 import 'package:puzzle_match/ui/widgets/game_controls.dart';
 import 'package:puzzle_match/ui/widgets/puzzle_board.dart';
 
@@ -78,10 +79,10 @@ class _GameScreenState extends State<GameScreen>
         if (!didPop) _handleBack(app);
       },
       child: Scaffold(
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Column(
+        body: Stack(
+          children: [
+            SafeArea(
+              child: Column(
                 children: [
                   _Header(
                     level: app.currentLevel,
@@ -161,6 +162,7 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ],
               ),
+            ),
               AnimatedSwitcher(
                 duration: AppMotion.overlay,
                 switchInCurve: AppMotion.easeOut,
@@ -179,30 +181,23 @@ class _GameScreenState extends State<GameScreen>
                         onResume: app.resumePausedGame,
                         onHome: () => _goHome(app),
                       )
-                    : app.phase == GamePhase.completed
-                    ? _ResultScrim(
+                    : app.phase == GamePhase.completed && image != null
+                    ? CompletionOverlay(
                         key: const ValueKey('completed'),
-                        title: app.config.nextStage(
+                        image: image,
+                        level: app.currentLevel,
+                        stage: app.currentStage,
+                        remaining: remaining,
+                        hints: app.profile.hintPoints,
+                        levelComplete: app.currentStage == 2 ||
+                            app.config.nextStage(
                                   app.currentLevel,
                                   app.currentStage,
                                 ) ==
-                                null
-                            ? 'LEVEL COMPLETE!'
-                            : app.currentStage == 2
-                            ? 'LEVEL COMPLETE!'
-                            : 'STAGE COMPLETE!',
-                        subtitle: '+100 Coins   +1 Hint',
-                        primaryLabel: app.config.nextStage(
-                                  app.currentLevel,
-                                  app.currentStage,
-                                ) ==
-                                null
-                            ? 'Home'
-                            : app.currentStage == 2
-                            ? 'Level ${app.currentLevel + 1}'
-                            : 'Next Stage',
-                        onPrimary: () => _afterWin(app),
+                                null,
+                        onNext: () => _afterWin(app),
                         onHome: () => _goHome(app),
+                        onBack: () => _goHome(app),
                       )
                     : app.phase == GamePhase.failed
                     ? _ResultScrim(
@@ -218,8 +213,7 @@ class _GameScreenState extends State<GameScreen>
             ],
           ),
         ),
-      ),
-    );
+      );
   }
 
   Future<void> _useHint(AppController app) async {
@@ -306,24 +300,34 @@ class _Header extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              'Level $level  ·  Stage $stage',
+              'Level $level  •  Stage $stage',
               textAlign: TextAlign.center,
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ),
+          const Icon(Icons.timer_outlined, color: Color(0xFFFFC107), size: 20),
+          const SizedBox(width: 4),
           AnimatedDefaultTextStyle(
             duration: AppMotion.overlay,
             curve: AppMotion.easeOut,
             style: TextStyle(
               fontWeight: FontWeight.w800,
-              fontSize: 18,
+              fontSize: 16,
               color: urgent ? Colors.redAccent : Colors.white,
             ),
             child: Text('$mm:$ss'),
           ),
           IconButton(
             onPressed: onPause,
-            icon: const Icon(Icons.pause_rounded),
+            icon: Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white70, width: 1.6),
+              ),
+              child: const Icon(Icons.pause_rounded, size: 18),
+            ),
           ),
         ],
       ),
