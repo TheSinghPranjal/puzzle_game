@@ -13,6 +13,7 @@ class PersistedAppData {
     required this.soundEnabled,
     required this.musicEnabled,
     required this.debugMode,
+    required this.darkMode,
     this.activeSnapshot,
   });
 
@@ -22,6 +23,7 @@ class PersistedAppData {
   final bool soundEnabled;
   final bool musicEnabled;
   final bool debugMode;
+  final bool darkMode;
   final PuzzleSnapshot? activeSnapshot;
 
   PersistedAppData copyWith({
@@ -31,6 +33,7 @@ class PersistedAppData {
     bool? soundEnabled,
     bool? musicEnabled,
     bool? debugMode,
+    bool? darkMode,
     PuzzleSnapshot? activeSnapshot,
     bool clearSnapshot = false,
   }) {
@@ -41,6 +44,7 @@ class PersistedAppData {
       soundEnabled: soundEnabled ?? this.soundEnabled,
       musicEnabled: musicEnabled ?? this.musicEnabled,
       debugMode: debugMode ?? this.debugMode,
+      darkMode: darkMode ?? this.darkMode,
       activeSnapshot: clearSnapshot
           ? null
           : (activeSnapshot ?? this.activeSnapshot),
@@ -89,6 +93,7 @@ class StorageService {
         soundEnabled: json['soundEnabled'] as bool? ?? true,
         musicEnabled: json['musicEnabled'] as bool? ?? true,
         debugMode: json['debugMode'] as bool? ?? false,
+        darkMode: json['darkMode'] as bool? ?? true,
         activeSnapshot: json['activeSnapshot'] == null
             ? null
             : PuzzleSnapshot.fromJson(
@@ -109,6 +114,7 @@ class StorageService {
       'soundEnabled': data.soundEnabled,
       'musicEnabled': data.musicEnabled,
       'debugMode': data.debugMode,
+      'darkMode': data.darkMode,
       'activeSnapshot': data.activeSnapshot?.toJson(),
     };
     await _prefs!.setString(_key, jsonEncode(json));
@@ -122,6 +128,7 @@ class StorageService {
       soundEnabled: true,
       musicEnabled: true,
       debugMode: false,
+      darkMode: true,
     );
   }
 }
