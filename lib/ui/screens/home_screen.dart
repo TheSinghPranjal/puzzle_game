@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:puzzle_match/models/puzzle_image_ref.dart';
 import 'package:puzzle_match/services/image_repository.dart';
 import 'package:puzzle_match/state/app_controller.dart';
+import 'package:puzzle_match/theme/app_theme.dart';
 import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/screens/game_screen.dart';
 import 'package:puzzle_match/ui/screens/levels_screen.dart';
@@ -26,15 +27,17 @@ class HomeScreen extends StatelessWidget {
     final resumeStage = profile.canResume ? profile.resumeStage : 1;
     final preview = _previewImage(app, resumeLevel, resumeStage);
 
+    final colors = context.puzzleColors;
+
     return Scaffold(
-      backgroundColor: navy,
+      backgroundColor: colors.background,
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: RadialGradient(
-            center: Alignment(0, -0.12),
+            center: const Alignment(0, -0.12),
             radius: 1.2,
-            colors: [navyMid, navy, Color(0xFF070B10)],
-            stops: [0, 0.55, 1],
+            colors: [colors.backgroundMid, colors.background, colors.backgroundEdge],
+            stops: const [0, 0.55, 1],
           ),
         ),
         child: SafeArea(
@@ -55,8 +58,8 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 '${profile.emoji}  ${profile.name}',
-                style: const TextStyle(
-                  color: Color(0xFF8B97A6),
+                style: TextStyle(
+                  color: colors.textMuted,
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
@@ -137,6 +140,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.puzzleColors;
     return Row(
       children: [
         _StatPill(leading: const _GoldCoin(size: 18), value: '$coins'),
@@ -162,9 +166,9 @@ class _TopBar extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFF151E28),
+              color: colors.chrome,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF3A4652), width: 1),
+              border: Border.all(color: colors.chromeBorder, width: 1),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.45),
@@ -173,9 +177,9 @@ class _TopBar extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.settings_rounded,
-              color: Color(0xFFC5CDD4),
+              color: colors.iconOnChrome,
               size: 22,
             ),
           ),
@@ -193,11 +197,12 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.puzzleColors;
     return Container(
       height: 36,
       padding: const EdgeInsets.fromLTRB(8, 0, 12, 0),
       decoration: BoxDecoration(
-        color: const Color(0xD10E171F),
+        color: colors.pillFill,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0x55C9B27A), width: 1),
       ),
@@ -207,8 +212,8 @@ class _StatPill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colors.textPrimary,
               fontWeight: FontWeight.w800,
               fontSize: 15,
             ),
@@ -270,23 +275,21 @@ class _TitleBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final colors = context.puzzleColors;
+    return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _ExtrudedWord(
           'IMAGE',
           style: _style,
-          depthColor: Color(0xFFB0B6BE),
-          face: Text('IMAGE', style: TextStyle(
-            fontSize: 34,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.1,
-            height: 1,
-            color: Colors.white,
-          )),
+          depthColor: colors.titleDepth,
+          face: Text(
+            'IMAGE',
+            style: _style.copyWith(color: colors.titleFace),
+          ),
         ),
-        SizedBox(width: 10),
-        _ExtrudedWord(
+        const SizedBox(width: 10),
+        const _ExtrudedWord(
           'PUZZLE',
           style: _style,
           depthColor: Color(0xFF8A3200),
@@ -639,19 +642,19 @@ class _NewGameButton extends StatelessWidget {
         height: 56,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFF0A1018),
+            color: context.puzzleColors.outlineFill,
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: const Color(0xFFFF6B00), width: 2),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _GradientIcon(icon: Icons.extension_rounded, size: 22),
-              SizedBox(width: 8),
+              const _GradientIcon(icon: Icons.extension_rounded, size: 22),
+              const SizedBox(width: 8),
               Text(
                 'NEW GAME',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: context.puzzleColors.textPrimary,
                   fontWeight: FontWeight.w900,
                   fontSize: 18,
                   letterSpacing: 1.3,
@@ -703,7 +706,7 @@ class _BottomNav extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
         decoration: BoxDecoration(
-          color: const Color(0xF00B1520),
+          color: context.puzzleColors.navBar,
           borderRadius: BorderRadius.circular(26),
         ),
         child: Row(
@@ -765,7 +768,7 @@ class _NavTab extends StatelessWidget {
             alignment: Alignment.center,
             decoration: selected
                 ? BoxDecoration(
-                    color: const Color(0xFF1A2734),
+                    color: context.puzzleColors.navTile,
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
@@ -806,8 +809,8 @@ class _NavTab extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: context.puzzleColors.textPrimary,
               fontSize: 10,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.7,

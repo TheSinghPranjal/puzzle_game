@@ -28,11 +28,26 @@ class PuzzleMatchApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
       value: controller,
-      child: MaterialApp(
-        title: 'Image Puzzle',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.dark(),
-        home: const HomeScreen(),
+      child: Consumer<AppController>(
+        builder: (context, app, _) {
+          final dark = app.darkMode;
+          SystemChrome.setSystemUIOverlayStyle(
+            SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+              statusBarIconBrightness:
+                  dark ? Brightness.light : Brightness.dark,
+              statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+            ),
+          );
+          return MaterialApp(
+            title: 'Image Puzzle',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.light(),
+            darkTheme: AppTheme.dark(),
+            themeMode: dark ? ThemeMode.dark : ThemeMode.light,
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
