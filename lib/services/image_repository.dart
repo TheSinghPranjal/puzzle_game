@@ -1,7 +1,7 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:puzzle_match/models/puzzle_image_ref.dart';
@@ -29,6 +29,7 @@ class ImageRepository {
     final image = switch (ref.kind) {
       PuzzleImageKind.builtin => await _generator.render(ref.builtinIndex ?? 0),
       PuzzleImageKind.file => await _decodeFile(ref.filePath!),
+      PuzzleImageKind.asset => await _decodeAsset(ref.assetPath ?? ''),
     };
     _images[ref.id] = image;
     return image;
@@ -73,6 +74,19 @@ class ImageRepository {
     final file = File(ref.filePath!);
     if (await file.exists()) {
       await file.delete();
+    }
+  }
+
+  Future<ui.Image> _decodeAsset(String assetPath) async {
+    if (assetPath.isEmpty) {
+      throw ImageLoadException('Puzzle asset path is missing.');
+    }
+    try {
+      final data = await rootBundle.load(assetPath);
+      return decodeImage(data.buffer.asUint8List());
+    } catch (error) {
+      if (error is ImageLoadException) rethrow;
+      throw ImageLoadException('Could not load puzzle asset $assetPath.');
     }
   }
 
