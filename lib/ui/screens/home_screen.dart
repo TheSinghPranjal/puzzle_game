@@ -1,8 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:puzzle_match/models/puzzle_image_ref.dart';
+import 'package:puzzle_match/services/image_repository.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/screens/game_screen.dart';
@@ -14,12 +13,10 @@ import 'package:puzzle_match/ui/widgets/puzzle_thumb.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const _navy = Color(0xFF0B1520);
-  static const _navyMid = Color(0xFF152433);
-  static const _gold = Color(0xFFFFC107);
-  static const _goldDeep = Color(0xFFFF6B00);
-  static const _cream = Color(0xFFF8EED8);
-  static const _brown = Color(0xFF3E2A18);
+  static const navy = Color(0xFF0B1520);
+  static const navyMid = Color(0xFF121C28);
+  static const cream = Color(0xFFF0E9D7);
+  static const brown = Color(0xFF4A3B2A);
 
   @override
   Widget build(BuildContext context) {
@@ -30,20 +27,22 @@ class HomeScreen extends StatelessWidget {
     final preview = _previewImage(app, resumeLevel, resumeStage);
 
     return Scaffold(
-      backgroundColor: _navy,
+      backgroundColor: navy,
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
-            center: Alignment(0, -0.15),
-            radius: 1.15,
-            colors: [_navyMid, _navy, Color(0xFF070B10)],
+            center: Alignment(0, -0.12),
+            radius: 1.2,
+            colors: [navyMid, navy, Color(0xFF070B10)],
+            stops: [0, 0.55, 1],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
+              const SizedBox(height: 6),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _TopBar(
                   coins: profile.coins,
                   hints: profile.hintPoints,
@@ -51,21 +50,21 @@ class HomeScreen extends StatelessWidget {
                       AppMotion.open(context, const SettingsScreen()),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 18),
               const _TitleBlock(),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               Text(
                 '${profile.emoji}  ${profile.name}',
                 style: const TextStyle(
-                  color: Color(0xFF9AA7B5),
-                  fontSize: 14,
+                  color: Color(0xFF8B97A6),
+                  fontSize: 15,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: _PreviewCard(
                     image: preview,
                     repository: app.images,
@@ -75,7 +74,7 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: _ResumeButton(
                   label: profile.canResume ? 'RESUME' : 'PLAY',
                   onPressed: () =>
@@ -84,12 +83,12 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: _NewGameButton(
                   onPressed: () => _start(context, app, resume: false),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               _BottomNav(
                 onProfile: () =>
                     AppMotion.open(context, const ProfileScreen()),
@@ -140,16 +139,19 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _StatPill(
-          leading: const _GoldCoin(size: 18),
-          value: '$coins',
-        ),
+        _StatPill(leading: const _GoldCoin(size: 18), value: '$coins'),
         const SizedBox(width: 8),
         _StatPill(
-          leading: const Icon(
+          leading: Icon(
             Icons.lightbulb_rounded,
-            color: Color(0xFFFFD54F),
+            color: const Color(0xFFFFD54F),
             size: 18,
+            shadows: [
+              Shadow(
+                color: const Color(0xFFFFD54F).withValues(alpha: 0.7),
+                blurRadius: 8,
+              ),
+            ],
           ),
           value: '$hints',
         ),
@@ -157,20 +159,25 @@ class _TopBar extends StatelessWidget {
         Pressable(
           onPressed: onSettings,
           child: Container(
-            width: 40,
-            height: 40,
+            width: 42,
+            height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFF1B2733),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFF3A4A58)),
+              color: const Color(0xFF151E28),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFF3A4652), width: 1),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  blurRadius: 8,
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
                 ),
               ],
             ),
-            child: const Icon(Icons.settings_rounded, color: Color(0xFFD0D6DC)),
+            child: const Icon(
+              Icons.settings_rounded,
+              color: Color(0xFFC5CDD4),
+              size: 22,
+            ),
           ),
         ),
       ],
@@ -187,11 +194,12 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      height: 36,
+      padding: const EdgeInsets.fromLTRB(8, 0, 12, 0),
       decoration: BoxDecoration(
-        color: const Color(0xCC121C26),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0x66FFC107), width: 1),
+        color: const Color(0xD10E171F),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0x55C9B27A), width: 1),
       ),
       child: Row(
         children: [
@@ -202,7 +210,7 @@ class _StatPill extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w800,
-              fontSize: 14,
+              fontSize: 15,
             ),
           ),
         ],
@@ -221,13 +229,19 @@ class _GoldCoin extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFFF59D), Color(0xFFFFB300), Color(0xFFF57F17)],
+          colors: [Color(0xFFFFF59D), Color(0xFFFFC107), Color(0xFFF57F17)],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFFC107).withValues(alpha: 0.45),
+            blurRadius: 4,
+          ),
+        ],
       ),
       child: Center(
         child: Text(
@@ -247,49 +261,106 @@ class _GoldCoin extends StatelessWidget {
 class _TitleBlock extends StatelessWidget {
   const _TitleBlock();
 
+  static const _style = TextStyle(
+    fontSize: 34,
+    fontWeight: FontWeight.w900,
+    letterSpacing: 1.1,
+    height: 1,
+  );
+
   @override
   Widget build(BuildContext context) {
-    const base = TextStyle(
-      fontSize: 32,
-      fontWeight: FontWeight.w900,
-      letterSpacing: 1.6,
-      height: 1,
-    );
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          'IMAGE  ',
-          style: base.copyWith(
+        _ExtrudedWord(
+          'IMAGE',
+          style: _style,
+          depthColor: Color(0xFFB0B6BE),
+          face: Text('IMAGE', style: TextStyle(
+            fontSize: 34,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.1,
+            height: 1,
             color: Colors.white,
-            shadows: const [
-              Shadow(color: Colors.black87, blurRadius: 8, offset: Offset(0, 2)),
-            ],
+          )),
+        ),
+        SizedBox(width: 10),
+        _ExtrudedWord(
+          'PUZZLE',
+          style: _style,
+          depthColor: Color(0xFF8A3200),
+          face: _GradientFace(text: 'PUZZLE', style: _style),
+        ),
+      ],
+    );
+  }
+}
+
+class _GradientFace extends StatelessWidget {
+  const _GradientFace({required this.text, required this.style});
+
+  final String text;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Color(0xFFFFE566),
+          Color(0xFFFFB300),
+          Color(0xFFFF6A00),
+        ],
+      ).createShader(bounds),
+      child: Text(text, style: style.copyWith(color: Colors.white)),
+    );
+  }
+}
+
+class _ExtrudedWord extends StatelessWidget {
+  const _ExtrudedWord(
+    this.text, {
+    required this.style,
+    required this.depthColor,
+    required this.face,
+  });
+
+  final String text;
+  final TextStyle style;
+  final Color depthColor;
+  final Widget face;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        for (var i = 5; i >= 1; i--)
+          Transform.translate(
+            offset: Offset(0, i.toDouble()),
+            child: Text(text, style: style.copyWith(color: depthColor)),
+          ),
+        Transform.translate(
+          offset: const Offset(0, 6),
+          child: Text(
+            text,
+            style: style.copyWith(
+              color: Colors.transparent,
+              shadows: [
+                Shadow(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
           ),
         ),
-        Stack(
-          children: [
-            Transform.translate(
-              offset: const Offset(0, 3.5),
-              child: Text(
-                'PUZZLE',
-                style: base.copyWith(color: const Color(0xFF7A2E00)),
-              ),
-            ),
-            Text(
-              'PUZZLE',
-              style: base.copyWith(
-                color: const Color(0xFFFFC107),
-                shadows: [
-                  Shadow(
-                    color: const Color(0xFFFF6B00).withValues(alpha: 0.45),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        face,
       ],
     );
   }
@@ -303,48 +374,58 @@ class _PreviewCard extends StatelessWidget {
   });
 
   final PuzzleImageRef image;
-  final dynamic repository;
+  final ImageRepository repository;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: HomeScreen._cream,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: const Color(0xFFE8D7B0), width: 1.2),
+        color: HomeScreen.cream,
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0xFFE4D4B0), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.45),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
-      clipBehavior: Clip.antiAlias,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 0),
       child: Column(
         children: [
           Expanded(
-            child: PuzzleThumb(image: image, repository: repository),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: PuzzleThumb(image: image, repository: repository),
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+          SizedBox(
+            height: 52,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CustomPaint(size: Size(22, 14), painter: _SprigPainter(true)),
+                const CustomPaint(
+                  size: Size(26, 16),
+                  painter: _WheatPainter(false),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   label,
                   style: const TextStyle(
                     fontFamily: 'serif',
-                    color: HomeScreen._brown,
+                    color: HomeScreen.brown,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
+                    height: 1,
                   ),
                 ),
                 const SizedBox(width: 8),
-                const CustomPaint(size: Size(22, 14), painter: _SprigPainter(false)),
+                const CustomPaint(
+                  size: Size(26, 16),
+                  painter: _WheatPainter(true),
+                ),
               ],
             ),
           ),
@@ -354,39 +435,54 @@ class _PreviewCard extends StatelessWidget {
   }
 }
 
-class _SprigPainter extends CustomPainter {
-  const _SprigPainter(this.left);
+class _WheatPainter extends CustomPainter {
+  const _WheatPainter(this.mirror);
 
-  final bool left;
+  final bool mirror;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    if (mirror) {
+      canvas.translate(size.width, 0);
+      canvas.scale(-1, 1);
+    }
+    final stem = Paint()
       ..color = const Color(0xFFC4A574)
-      ..strokeWidth = 1.4
+      ..strokeWidth = 1.35
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    final dir = left ? 1.0 : -1.0;
     final path = Path()
-      ..moveTo(left ? 0 : size.width, size.height * 0.55)
+      ..moveTo(1, size.height * 0.78)
       ..quadraticBezierTo(
-        size.width / 2,
-        size.height * 0.1,
-        left ? size.width : 0,
-        size.height * 0.45,
+        size.width * 0.42,
+        size.height * 0.08,
+        size.width * 0.96,
+        size.height * 0.42,
       );
-    canvas.drawPath(path, paint);
-    for (var i = 0; i < 3; i++) {
+    canvas.drawPath(path, stem);
+    final leaf = Paint()..color = const Color(0xFFC4A574);
+    const spots = [0.28, 0.48, 0.68, 0.84];
+    for (var i = 0; i < spots.length; i++) {
+      final t = spots[i];
+      final x = size.width * t;
+      final y = size.height * (0.72 - t * 0.42);
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(-0.7);
       canvas.drawOval(
-        Rect.fromCenter(
-          center: Offset(size.width * (left ? 0.25 + i * 0.25 : 0.75 - i * 0.25), 5.0 + i * 2),
-          width: 6,
-          height: 3.5,
-        ),
-        Paint()..color = const Color(0xFFC4A574),
+        Rect.fromCenter(center: Offset.zero, width: 7.5, height: 3.2),
+        leaf,
       );
+      canvas.restore();
+      canvas.save();
+      canvas.translate(x + 1.5, y + 3.5);
+      canvas.rotate(0.55);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: 6.5, height: 2.8),
+        leaf,
+      );
+      canvas.restore();
     }
-    dir;
   }
 
   @override
@@ -413,17 +509,21 @@ class _ResumeButton extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(28),
                 gradient: const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFFF6B00),
+                    Color(0xFFFFC14A),
                     Color(0xFFFF9800),
-                    Color(0xFFFFC107),
+                    Color(0xFFFB8C00),
+                    Color(0xFFF57C00),
                   ],
+                  stops: [0, 0.28, 0.62, 1],
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFFF6B00).withValues(alpha: 0.55),
                     blurRadius: 18,
-                    spreadRadius: 1,
+                    spreadRadius: 0.5,
                     offset: const Offset(0, 6),
                   ),
                 ],
@@ -431,10 +531,10 @@ class _ResumeButton extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned(
-                    left: 12,
-                    right: 12,
-                    top: 4,
-                    height: 20,
+                    left: 14,
+                    right: 14,
+                    top: 3,
+                    height: 18,
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
@@ -442,7 +542,7 @@ class _ResumeButton extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.white.withValues(alpha: 0.38),
+                            Colors.white.withValues(alpha: 0.42),
                             Colors.white.withValues(alpha: 0),
                           ],
                         ),
@@ -453,15 +553,19 @@ class _ResumeButton extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 26),
-                        const SizedBox(width: 6),
+                        const Icon(
+                          Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                        const SizedBox(width: 4),
                         Text(
                           label,
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w900,
                             fontSize: 18,
-                            letterSpacing: 1.2,
+                            letterSpacing: 1.4,
                           ),
                         ),
                       ],
@@ -472,10 +576,10 @@ class _ResumeButton extends StatelessWidget {
             ),
           ),
         ),
-        const Positioned(left: 18, top: -6, child: _Sparkle()),
-        const Positioned(right: 22, top: -4, child: _Sparkle(small: true)),
-        const Positioned(right: 8, bottom: -2, child: _Sparkle()),
-        const Positioned(left: 40, bottom: -6, child: _Sparkle(small: true)),
+        const Positioned(left: 22, top: -5, child: _Sparkle()),
+        const Positioned(right: 28, top: -3, child: _Sparkle(small: true)),
+        const Positioned(right: 10, bottom: 6, child: _Sparkle(small: true)),
+        const Positioned(left: 48, bottom: -4, child: _Sparkle()),
       ],
     );
   }
@@ -501,7 +605,7 @@ class _SparklePainter extends CustomPainter {
     final c = Offset(size.width / 2, size.height / 2);
     final paint = Paint()
       ..color = Colors.white
-      ..strokeWidth = 1.3
+      ..strokeWidth = 1.25
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(Offset(c.dx, 0), Offset(c.dx, size.height), paint);
     canvas.drawLine(Offset(0, c.dy), Offset(size.width, c.dy), paint);
@@ -535,14 +639,14 @@ class _NewGameButton extends StatelessWidget {
         height: 56,
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: const Color(0xFF0E141C),
+            color: const Color(0xFF0A1018),
             borderRadius: BorderRadius.circular(28),
             border: Border.all(color: const Color(0xFFFF6B00), width: 2),
           ),
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.extension_rounded, color: Color(0xFFFFC107), size: 22),
+              _GradientIcon(icon: Icons.extension_rounded, size: 22),
               SizedBox(width: 8),
               Text(
                 'NEW GAME',
@@ -550,13 +654,33 @@ class _NewGameButton extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 18,
-                  letterSpacing: 1.2,
+                  letterSpacing: 1.3,
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _GradientIcon extends StatelessWidget {
+  const _GradientIcon({required this.icon, this.size = 24});
+
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      blendMode: BlendMode.srcIn,
+      shaderCallback: (bounds) => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFFFD54F), Color(0xFFFF8F00)],
+      ).createShader(bounds),
+      child: Icon(icon, size: size, color: Colors.white),
     );
   }
 }
@@ -574,43 +698,41 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 8),
-      decoration: BoxDecoration(
-        color: const Color(0xE60B1520),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 12,
-            offset: const Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _NavTab(
-              icon: Icons.person_outline_rounded,
-              label: 'PROFILE',
-              onTap: onProfile,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 4, 10, 4),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(6, 8, 6, 8),
+        decoration: BoxDecoration(
+          color: const Color(0xF00B1520),
+          borderRadius: BorderRadius.circular(26),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: _NavTab(
+                icon: Icons.person_rounded,
+                label: 'PROFILE',
+                onTap: onProfile,
+              ),
             ),
-          ),
-          Expanded(
-            child: _NavTab(
-              icon: Icons.extension_rounded,
-              label: 'LEVELS',
-              selected: true,
-              onTap: onLevels,
+            Expanded(
+              child: _NavTab(
+                icon: Icons.extension_rounded,
+                label: 'LEVELS',
+                selected: true,
+                onTap: onLevels,
+              ),
             ),
-          ),
-          Expanded(
-            child: _NavTab(
-              icon: Icons.tune_rounded,
-              label: 'SETTINGS',
-              onTap: onSettings,
+            Expanded(
+              child: _NavTab(
+                icon: Icons.tune_rounded,
+                label: 'SETTINGS',
+                onTap: onSettings,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -631,47 +753,78 @@ class _NavTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: selected
-              ? BoxDecoration(
-                  color: const Color(0xFF1C2A38),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFFF6B00).withValues(alpha: 0.28),
-                      blurRadius: 10,
-                    ),
-                  ],
-                )
-              : null,
-          child: Icon(icon, color: const Color(0xFFFFC107), size: 24),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 10,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.6,
+    final iconWidget = _GradientIcon(icon: icon, size: selected ? 26 : 24);
+    return Pressable(
+      onPressed: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: selected ? 52 : 40,
+            height: selected ? 44 : 36,
+            alignment: Alignment.center,
+            decoration: selected
+                ? BoxDecoration(
+                    color: const Color(0xFF1A2734),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFFF6B00).withValues(alpha: 0.22),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  )
+                : null,
+            child: selected
+                ? Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Positioned(
+                        top: 1,
+                        left: 8,
+                        right: 8,
+                        height: 8,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.white.withValues(alpha: 0.28),
+                                Colors.white.withValues(alpha: 0),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      iconWidget,
+                    ],
+                  )
+                : iconWidget,
           ),
-        ),
-        const SizedBox(height: 4),
-        AnimatedContainer(
-          duration: AppMotion.press,
-          width: selected ? 22 : 0,
-          height: 3,
-          decoration: BoxDecoration(
-            color: const Color(0xFFFF6B00),
-            borderRadius: BorderRadius.circular(2),
+          const SizedBox(height: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.7,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 5),
+          AnimatedContainer(
+            duration: AppMotion.press,
+            width: selected ? 22 : 0,
+            height: 3,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFF6B00),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
+      ),
     );
-    return Pressable(onPressed: onTap, child: content);
   }
 }
