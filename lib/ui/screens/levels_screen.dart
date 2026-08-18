@@ -26,7 +26,7 @@ class LevelsScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            tileColor: AppTheme.surface,
+            tileColor: AppTheme.panel(context),
             leading: CircleAvatar(
               backgroundColor: completed
                   ? AppTheme.success.withValues(alpha: 0.2)

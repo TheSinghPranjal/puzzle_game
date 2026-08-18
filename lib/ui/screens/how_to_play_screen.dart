@@ -49,7 +49,7 @@ class _Tip extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: AppTheme.panel(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -57,7 +57,7 @@ class _Tip extends StatelessWidget {
         children: [
           Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
           const SizedBox(height: 6),
-          Text(body, style: const TextStyle(color: AppTheme.textMuted, height: 1.4)),
+          Text(body, style: TextStyle(color: AppTheme.muted(context), height: 1.4)),
         ],
       ),
     );

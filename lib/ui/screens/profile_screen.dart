@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:puzzle_match/models/profile.dart';
 import 'package:puzzle_match/state/app_controller.dart';
+import 'package:puzzle_match/theme/app_theme.dart';
 import 'package:puzzle_match/ui/motion.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  static const navy = Color(0xFF0A0E17);
-  static const navyMid = Color(0xFF121A26);
-  static const card = Color(0xFF1C222E);
   static const gold = Color(0xFFFFB800);
   static const goldDeep = Color(0xFFFF8F00);
 
@@ -17,47 +15,56 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final app = context.watch<AppController>();
     final selected = app.profile;
+    final colors = context.puzzleColors;
 
     return Scaffold(
-      backgroundColor: navy,
+      backgroundColor: colors.background,
       body: Stack(
         children: [
-          const DecoratedBox(
+          DecoratedBox(
             decoration: BoxDecoration(
               gradient: RadialGradient(
-                center: Alignment(0, -0.2),
+                center: const Alignment(0, -0.2),
                 radius: 1.2,
-                colors: [navyMid, navy, Color(0xFF05070C)],
+                colors: [colors.backgroundMid, colors.background, colors.backgroundEdge],
               ),
             ),
-            child: SizedBox.expand(),
+            child: const SizedBox.expand(),
           ),
-          const Positioned(
+          Positioned(
             top: 36,
             right: -18,
             child: IgnorePointer(
               child: Opacity(
                 opacity: 0.07,
-                child: Icon(Icons.pets_rounded, size: 168, color: Colors.white),
+                child: Icon(Icons.pets_rounded, size: 168, color: colors.paw),
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             top: 210,
             right: 72,
             child: IgnorePointer(
               child: Opacity(
                 opacity: 0.04,
-                child: Icon(Icons.pets_rounded, size: 72, color: Colors.white),
+                child: Icon(Icons.pets_rounded, size: 72, color: colors.paw),
               ),
             ),
           ),
-          const Positioned(
+          Positioned(
             left: 0,
             right: 0,
             bottom: 0,
             height: 180,
-            child: IgnorePointer(child: CustomPaint(painter: _MountainPainter())),
+            child: IgnorePointer(
+              child: CustomPaint(
+                painter: _MountainPainter(
+                  back: colors.mountainBack,
+                  mid: colors.mountainMid,
+                  tree: colors.mountainTree,
+                ),
+              ),
+            ),
           ),
           SafeArea(
             child: Column(
@@ -104,6 +111,7 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.puzzleColors;
     return Row(
       children: [
         Pressable(
@@ -112,9 +120,9 @@ class _Header extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: const Color(0xFF1E232E),
+              color: colors.chrome,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFF3A4652)),
+              border: Border.all(color: colors.chromeBorder),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.35),
@@ -123,19 +131,19 @@ class _Header extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.chevron_left_rounded,
-              color: Colors.white,
+              color: colors.textPrimary,
               size: 28,
             ),
           ),
         ),
-        const Expanded(
+        Expanded(
           child: Text(
             'Profile',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white,
+              color: colors.textPrimary,
               fontWeight: FontWeight.w800,
               fontSize: 20,
             ),
@@ -152,7 +160,8 @@ class _ChooseHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    final colors = context.puzzleColors;
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
@@ -160,17 +169,17 @@ class _ChooseHeader extends StatelessWidget {
             Text(
               'Choose an avatar',
               style: TextStyle(
-                color: Colors.white,
+                color: colors.textPrimary,
                 fontWeight: FontWeight.w800,
                 fontSize: 18,
               ),
             ),
-            SizedBox(width: 8),
-            _Sparkle(size: 8, color: ProfileScreen.gold),
+            const SizedBox(width: 8),
+            const _Sparkle(size: 8, color: ProfileScreen.gold),
           ],
         ),
-        SizedBox(height: 10),
-        _PawDivider(),
+        const SizedBox(height: 10),
+        const _PawDivider(),
       ],
     );
   }
@@ -293,10 +302,10 @@ class _AvatarCard extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(8, 16, 8, 12),
             decoration: BoxDecoration(
-              color: ProfileScreen.card,
+              color: context.puzzleColors.surface,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: selected ? ProfileScreen.gold : const Color(0xFF2E3644),
+                color: selected ? ProfileScreen.gold : context.puzzleColors.chromeBorder,
                 width: selected ? 2.2 : 1,
               ),
               boxShadow: selected
@@ -322,7 +331,7 @@ class _AvatarCard extends StatelessWidget {
                 Text(
                   name,
                   style: TextStyle(
-                    color: selected ? ProfileScreen.gold : Colors.white,
+                    color: selected ? ProfileScreen.gold : context.puzzleColors.textPrimary,
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
                   ),
@@ -381,12 +390,15 @@ class _SummaryCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF1A2433), Color(0xFF121A26)],
+          colors: [
+            context.puzzleColors.surfaceAltStart,
+            context.puzzleColors.surfaceAltEnd,
+          ],
         ),
-        border: Border.all(color: const Color(0xFF3A4A5C), width: 1),
+        border: Border.all(color: context.puzzleColors.chromeBorder, width: 1),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -405,8 +417,8 @@ class _SummaryCard extends StatelessWidget {
               children: [
                 Text(
                   profile.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: context.puzzleColors.textPrimary,
                     fontWeight: FontWeight.w900,
                     fontSize: 22,
                   ),
@@ -520,8 +532,8 @@ class _StatRow extends StatelessWidget {
                     children: [
                       TextSpan(
                         text: '$label ',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: context.puzzleColors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                         ),
@@ -544,7 +556,7 @@ class _StatRow extends StatelessWidget {
           ),
         ),
         if (showDivider)
-          const Divider(height: 1, thickness: 1, color: Color(0xFF2A384D)),
+          Divider(height: 1, thickness: 1, color: context.puzzleColors.divider),
       ],
     );
   }
@@ -596,21 +608,21 @@ class _UnlockBanner extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: const Color(0xCC161C28),
+            color: context.puzzleColors.bannerFill,
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0x66D0D6DC)),
+            border: Border.all(color: context.puzzleColors.chromeBorder),
           ),
-          child: const Row(
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.pets_rounded, color: Color(0xFFC48B7A), size: 16),
-              SizedBox(width: 8),
+              const Icon(Icons.pets_rounded, color: Color(0xFFC48B7A), size: 16),
+              const SizedBox(width: 8),
               Flexible(
                 child: Text(
                   'Play more to unlock new avatars!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Color(0xFFB0B8C4),
+                    color: context.puzzleColors.bannerText,
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                   ),
@@ -718,11 +730,19 @@ class _NightSkyPainter extends CustomPainter {
 }
 
 class _MountainPainter extends CustomPainter {
-  const _MountainPainter();
+  const _MountainPainter({
+    required this.back,
+    required this.mid,
+    required this.tree,
+  });
+
+  final Color back;
+  final Color mid;
+  final Color tree;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final back = Path()
+    final backPath = Path()
       ..moveTo(0, size.height)
       ..lineTo(0, size.height * 0.58)
       ..lineTo(size.width * 0.22, size.height * 0.18)
@@ -732,8 +752,8 @@ class _MountainPainter extends CustomPainter {
       ..lineTo(size.width, size.height * 0.28)
       ..lineTo(size.width, size.height)
       ..close();
-    canvas.drawPath(back, Paint()..color = const Color(0xFF101820));
-    final mid = Path()
+    canvas.drawPath(backPath, Paint()..color = back);
+    final midPath = Path()
       ..moveTo(0, size.height)
       ..lineTo(0, size.height * 0.72)
       ..lineTo(size.width * 0.18, size.height * 0.46)
@@ -743,8 +763,8 @@ class _MountainPainter extends CustomPainter {
       ..lineTo(size.width, size.height * 0.5)
       ..lineTo(size.width, size.height)
       ..close();
-    canvas.drawPath(mid, Paint()..color = const Color(0xFF0B1218));
-    final tree = Paint()..color = const Color(0xFF080E14);
+    canvas.drawPath(midPath, Paint()..color = mid);
+    final treePaint = Paint()..color = tree;
     for (var i = 0; i < 9; i++) {
       final x = size.width * (0.06 + i * 0.11);
       final h = 28.0 + (i % 3) * 10;
@@ -753,10 +773,13 @@ class _MountainPainter extends CustomPainter {
         ..lineTo(x - 11, size.height)
         ..lineTo(x + 11, size.height)
         ..close();
-      canvas.drawPath(path, tree);
+      canvas.drawPath(path, treePaint);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _MountainPainter oldDelegate) =>
+      back != oldDelegate.back ||
+      mid != oldDelegate.mid ||
+      tree != oldDelegate.tree;
 }

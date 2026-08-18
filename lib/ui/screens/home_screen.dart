@@ -14,8 +14,6 @@ import 'package:puzzle_match/ui/widgets/puzzle_thumb.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const navy = Color(0xFF0B1520);
-  static const navyMid = Color(0xFF121C28);
   static const cream = Color(0xFFF0E9D7);
   static const brown = Color(0xFF4A3B2A);
 
