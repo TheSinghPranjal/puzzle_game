@@ -8,6 +8,7 @@ import 'package:puzzle_match/logic/puzzle_engine.dart';
 import 'package:puzzle_match/logic/reward_service.dart';
 import 'package:puzzle_match/logic/timer_controller.dart';
 import 'package:puzzle_match/models/profile.dart';
+import 'package:puzzle_match/models/puzzle_asset_catalog.dart';
 import 'package:puzzle_match/models/puzzle_image_ref.dart';
 import 'package:puzzle_match/models/puzzle_snapshot.dart';
 import 'package:puzzle_match/models/stage_config.dart';
@@ -65,7 +66,10 @@ class AppController extends ChangeNotifier {
 
   Future<void> load() async {
     final data = await _storage.load();
-    config = data.config;
+    config = PuzzleAssetCatalog.apply(
+      data.config,
+      await PuzzleAssetCatalog.loadFromBundle(),
+    );
     profiles = data.profiles;
     selectedProfileId = data.selectedProfileId;
     if (!profiles.any((item) => item.id == selectedProfileId)) {
@@ -288,6 +292,11 @@ class AppController extends ChangeNotifier {
     int stage,
     PuzzleImageRef image,
   ) async {
+    if (image.isBundled) {
+      lastError = 'Bundled level images cannot be removed.';
+      notifyListeners();
+      return;
+    }
     final current = config.stage(level, stage);
     if (current.images.length <= GridValidation.minImagesPerStage) {
       lastError = 'Each stage needs at least one image.';
