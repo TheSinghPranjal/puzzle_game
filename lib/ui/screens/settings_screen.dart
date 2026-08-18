@@ -27,6 +27,15 @@ class SettingsScreen extends StatelessWidget {
             onChanged: (_) => app.toggleMusic(),
           ),
           SwitchListTile(
+            secondary: Icon(
+              app.darkMode ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+            ),
+            title: const Text('Dark mode'),
+            subtitle: Text(app.darkMode ? 'Navy night theme' : 'Cream daylight theme'),
+            value: app.darkMode,
+            onChanged: (_) => app.toggleDarkMode(),
+          ),
+          SwitchListTile(
             title: const Text('Developer tile IDs'),
             subtitle: const Text('For diagnosing shuffle and grouping'),
             value: app.debugMode,
@@ -65,7 +74,7 @@ class SettingsScreen extends StatelessWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: AppTheme.panel(context),
         title: const Text('Reset progress?'),
         content: Text(
           'This resets ${app.profile.name} only. Other profiles are unchanged.',
