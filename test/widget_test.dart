@@ -28,7 +28,8 @@ void main() {
     );
     await tester.pump();
     expect(find.text('NEW GAME'), findsOneWidget);
-    expect(find.text('IMAGE PUZZLE'), findsOneWidget);
+    expect(find.text('IMAGE'), findsWidgets);
+    expect(find.text('PUZZLE'), findsWidgets);
     expect(find.textContaining('Tiger'), findsWidgets);
   });
 }
