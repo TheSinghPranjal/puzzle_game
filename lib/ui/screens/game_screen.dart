@@ -163,11 +163,27 @@ class _GameScreenState extends State<GameScreen>
                 ],
               ),
             ),
-              AnimatedSwitcher(
+            Positioned.fill(
+              child: AnimatedSwitcher(
                 duration: AppMotion.overlay,
                 switchInCurve: AppMotion.easeOut,
                 switchOutCurve: AppMotion.easeIn,
-                transitionBuilder: AppMotion.overlayTransition,
+                layoutBuilder: (currentChild, previousChildren) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      ...previousChildren,
+                      ?currentChild,
+                    ],
+                  );
+                },
+                transitionBuilder: (child, animation) {
+                  final key = child.key;
+                  if (key == const ValueKey('completed')) {
+                    return FadeTransition(opacity: animation, child: child);
+                  }
+                  return AppMotion.overlayTransition(child, animation);
+                },
                 child: _countdownValue != null
                     ? _CountdownScrim(
                         key: const ValueKey('countdown'),
@@ -210,6 +226,7 @@ class _GameScreenState extends State<GameScreen>
                       )
                     : const SizedBox.shrink(key: ValueKey('none')),
               ),
+            ),
             ],
           ),
         ),

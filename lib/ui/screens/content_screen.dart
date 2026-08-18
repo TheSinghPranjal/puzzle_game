@@ -46,7 +46,7 @@ class _ContentScreenState extends State<ContentScreen> {
           const SizedBox(height: 8),
           Text(
             'Grid ${stage.rows} × ${stage.columns}  ·  ${stage.timerSeconds}s  ·  ${stage.images.length}/${GridValidation.maxImagesPerStage} images',
-            style: const TextStyle(color: AppTheme.textMuted),
+            style: TextStyle(color: AppTheme.muted(context)),
           ),
           const SizedBox(height: 16),
           Row(
@@ -144,9 +144,9 @@ class _ContentScreenState extends State<ContentScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Bundled images use names like 1of5level1. You can also add up to 5 images per stage. One is chosen at random each attempt.',
-            style: TextStyle(color: AppTheme.textMuted),
+            style: TextStyle(color: AppTheme.muted(context)),
           ),
         ],
       ),
