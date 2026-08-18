@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/theme/app_theme.dart';
+import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/screens/game_screen.dart';
 
 class LevelsScreen extends StatelessWidget {
@@ -71,11 +72,7 @@ class LevelsScreen extends StatelessWidget {
                       ).showSnackBar(SnackBar(content: Text(error)));
                       return;
                     }
-                    await Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const GameScreen(),
-                      ),
-                    );
+                    await AppMotion.open(context, const GameScreen());
                   }
                 : null,
           );

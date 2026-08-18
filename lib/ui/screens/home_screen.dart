@@ -6,6 +6,7 @@ import 'package:puzzle_match/ui/screens/game_screen.dart';
 import 'package:puzzle_match/ui/screens/levels_screen.dart';
 import 'package:puzzle_match/ui/screens/profile_screen.dart';
 import 'package:puzzle_match/ui/screens/settings_screen.dart';
+import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/widgets/game_controls.dart';
 import 'package:puzzle_match/ui/widgets/puzzle_thumb.dart';
 
@@ -35,10 +36,9 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const Spacer(),
                   IconButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SettingsScreen(),
-                      ),
+                    onPressed: () => AppMotion.open(
+                      context,
+                      const SettingsScreen(),
                     ),
                     icon: const Icon(Icons.settings_rounded),
                   ),
@@ -120,29 +120,17 @@ class HomeScreen extends StatelessWidget {
                   _NavItem(
                     icon: Icons.person_rounded,
                     label: 'Profile',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ProfileScreen(),
-                      ),
-                    ),
+                    onTap: () => AppMotion.open(context, const ProfileScreen()),
                   ),
                   _NavItem(
                     icon: Icons.map_rounded,
                     label: 'Levels',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const LevelsScreen(),
-                      ),
-                    ),
+                    onTap: () => AppMotion.open(context, const LevelsScreen()),
                   ),
                   _NavItem(
                     icon: Icons.tune_rounded,
                     label: 'Settings',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const SettingsScreen(),
-                      ),
-                    ),
+                    onTap: () => AppMotion.open(context, const SettingsScreen()),
                   ),
                 ],
               ),
@@ -164,9 +152,7 @@ class HomeScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
       return;
     }
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const GameScreen()),
-    );
+    await AppMotion.open(context, const GameScreen());
   }
 }
 
@@ -183,9 +169,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+    return Pressable(
+      onPressed: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Column(

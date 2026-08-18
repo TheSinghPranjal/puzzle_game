@@ -1,8 +1,11 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:puzzle_match/models/puzzle_snapshot.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/theme/app_theme.dart';
+import 'package:puzzle_match/ui/motion.dart';
 import 'package:puzzle_match/ui/widgets/game_controls.dart';
 import 'package:puzzle_match/ui/widgets/puzzle_board.dart';
 
@@ -105,32 +108,41 @@ class _GameScreenState extends State<GameScreen>
                                     height = constraints.maxHeight;
                                     width = height * aspect;
                                   }
-                                  return SizedBox(
-                                    width: width,
-                                    height: height,
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withValues(
-                                              alpha: 0.35,
-                                            ),
-                                            blurRadius: 16,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
+                                  return AnimatedSwitcher(
+                                    duration: AppMotion.stage,
+                                    switchInCurve: AppMotion.easeOut,
+                                    switchOutCurve: AppMotion.easeIn,
+                                    transitionBuilder: AppMotion.fadeSlide,
+                                    child: SizedBox(
+                                      key: ValueKey(
+                                        '${app.currentLevel}-${app.currentStage}-${app.currentImage?.id}',
                                       ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: PuzzleBoard(
-                                          engine: engine,
-                                          image: image,
-                                          interactive: !app.boardLocked &&
-                                              !_hintAnimating,
-                                          debugMode: app.debugMode,
-                                          highlightIndex: app.hintTo,
-                                          onMoved: app.onBoardMoved,
+                                      width: width,
+                                      height: height,
+                                      child: DecoratedBox(
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(8),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.35,
+                                              ),
+                                              blurRadius: 16,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ],
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: PuzzleBoard(
+                                            engine: engine,
+                                            image: image,
+                                            interactive: !app.boardLocked &&
+                                                !_hintAnimating,
+                                            debugMode: app.debugMode,
+                                            highlightIndex: app.hintTo,
+                                            onMoved: app.onBoardMoved,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -149,47 +161,60 @@ class _GameScreenState extends State<GameScreen>
                   ),
                 ],
               ),
-              if (_countdownValue != null)
-                _CountdownScrim(
-                  label: _countdownValue == 0 ? 'SOLVE' : '${_countdownValue!}',
-                ),
-              if (app.phase == GamePhase.paused)
-                _PauseScrim(
-                  onResume: app.resumePausedGame,
-                  onHome: () => _goHome(app),
-                ),
-              if (app.phase == GamePhase.completed)
-                _ResultScrim(
-                  title: app.config.nextStage(
-                            app.currentLevel,
-                            app.currentStage,
-                          ) ==
-                          null
-                      ? 'LEVEL COMPLETE!'
-                      : app.currentStage == 2
-                      ? 'LEVEL COMPLETE!'
-                      : 'STAGE COMPLETE!',
-                  subtitle: '+100 Coins   +1 Hint',
-                  primaryLabel: app.config.nextStage(
-                            app.currentLevel,
-                            app.currentStage,
-                          ) ==
-                          null
-                      ? 'Home'
-                      : app.currentStage == 2
-                      ? 'Level ${app.currentLevel + 1}'
-                      : 'Next Stage',
-                  onPrimary: () => _afterWin(app),
-                  onHome: () => _goHome(app),
-                ),
-              if (app.phase == GamePhase.failed)
-                _ResultScrim(
-                  title: "TIME'S UP!",
-                  subtitle: 'No rewards this attempt',
-                  primaryLabel: 'Retry',
-                  onPrimary: () => _retry(app),
-                  onHome: () => _goHome(app),
-                ),
+              AnimatedSwitcher(
+                duration: AppMotion.overlay,
+                switchInCurve: AppMotion.easeOut,
+                switchOutCurve: AppMotion.easeIn,
+                transitionBuilder: AppMotion.overlayTransition,
+                child: _countdownValue != null
+                    ? _CountdownScrim(
+                        key: const ValueKey('countdown'),
+                        label: _countdownValue == 0
+                            ? 'SOLVE'
+                            : '${_countdownValue!}',
+                      )
+                    : app.phase == GamePhase.paused
+                    ? _PauseScrim(
+                        key: const ValueKey('paused'),
+                        onResume: app.resumePausedGame,
+                        onHome: () => _goHome(app),
+                      )
+                    : app.phase == GamePhase.completed
+                    ? _ResultScrim(
+                        key: const ValueKey('completed'),
+                        title: app.config.nextStage(
+                                  app.currentLevel,
+                                  app.currentStage,
+                                ) ==
+                                null
+                            ? 'LEVEL COMPLETE!'
+                            : app.currentStage == 2
+                            ? 'LEVEL COMPLETE!'
+                            : 'STAGE COMPLETE!',
+                        subtitle: '+100 Coins   +1 Hint',
+                        primaryLabel: app.config.nextStage(
+                                  app.currentLevel,
+                                  app.currentStage,
+                                ) ==
+                                null
+                            ? 'Home'
+                            : app.currentStage == 2
+                            ? 'Level ${app.currentLevel + 1}'
+                            : 'Next Stage',
+                        onPrimary: () => _afterWin(app),
+                        onHome: () => _goHome(app),
+                      )
+                    : app.phase == GamePhase.failed
+                    ? _ResultScrim(
+                        key: const ValueKey('failed'),
+                        title: "TIME'S UP!",
+                        subtitle: 'No rewards this attempt',
+                        primaryLabel: 'Retry',
+                        onPrimary: () => _retry(app),
+                        onHome: () => _goHome(app),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('none')),
+              ),
             ],
           ),
         ),
@@ -286,13 +311,15 @@ class _Header extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ),
-          Text(
-            '$mm:$ss',
+          AnimatedDefaultTextStyle(
+            duration: AppMotion.overlay,
+            curve: AppMotion.easeOut,
             style: TextStyle(
               fontWeight: FontWeight.w800,
               fontSize: 18,
               color: urgent ? Colors.redAccent : Colors.white,
             ),
+            child: Text('$mm:$ss'),
           ),
           IconButton(
             onPressed: onPause,
@@ -320,13 +347,15 @@ class _HintBar extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
       child: Center(
-        child: GestureDetector(
-          onTap: enabled ? onHint : null,
+        child: Pressable(
+          enabled: enabled,
+          onPressed: enabled ? onHint : null,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
               AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: AppMotion.overlay,
+                curve: AppMotion.easeOut,
                 width: 74,
                 height: 74,
                 decoration: BoxDecoration(
@@ -349,16 +378,20 @@ class _HintBar extends StatelessWidget {
               Positioned(
                 right: -2,
                 top: -2,
-                child: CircleAvatar(
-                  radius: 12,
-                  backgroundColor:
-                      enabled ? const Color(0xFF1E88E5) : Colors.blueGrey,
-                  child: Text(
-                    '$hints',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                child: AnimatedSwitcher(
+                  duration: AppMotion.press,
+                  child: CircleAvatar(
+                    key: ValueKey(hints),
+                    radius: 12,
+                    backgroundColor:
+                        enabled ? const Color(0xFF1E88E5) : Colors.blueGrey,
+                    child: Text(
+                      '$hints',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -372,7 +405,7 @@ class _HintBar extends StatelessWidget {
 }
 
 class _CountdownScrim extends StatelessWidget {
-  const _CountdownScrim({required this.label});
+  const _CountdownScrim({super.key, required this.label});
 
   final String label;
 
@@ -381,13 +414,28 @@ class _CountdownScrim extends StatelessWidget {
     return ColoredBox(
       color: Colors.black54,
       child: Center(
-        child: Text(
-          label,
-          style: const TextStyle(
-            fontSize: 72,
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-            letterSpacing: 2,
+        child: AnimatedSwitcher(
+          duration: AppMotion.countdown,
+          switchInCurve: AppMotion.spring,
+          switchOutCurve: AppMotion.easeIn,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.6, end: 1).animate(animation),
+                child: child,
+              ),
+            );
+          },
+          child: Text(
+            label,
+            key: ValueKey(label),
+            style: const TextStyle(
+              fontSize: 72,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
           ),
         ),
       ),
@@ -396,30 +444,37 @@ class _CountdownScrim extends StatelessWidget {
 }
 
 class _PauseScrim extends StatelessWidget {
-  const _PauseScrim({required this.onResume, required this.onHome});
+  const _PauseScrim({
+    super.key,
+    required this.onResume,
+    required this.onHome,
+  });
 
   final VoidCallback onResume;
   final VoidCallback onHome;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.72),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Paused',
-                style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 28),
-              GameButton(label: 'Resume', onPressed: onResume),
-              const SizedBox(height: 12),
-              GameButton(label: 'Home', onPressed: onHome, primary: false),
-            ],
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.55),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Paused',
+                  style: TextStyle(fontSize: 36, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 28),
+                GameButton(label: 'Resume', onPressed: onResume),
+                const SizedBox(height: 12),
+                GameButton(label: 'Home', onPressed: onHome, primary: false),
+              ],
+            ),
           ),
         ),
       ),
@@ -429,6 +484,7 @@ class _PauseScrim extends StatelessWidget {
 
 class _ResultScrim extends StatelessWidget {
   const _ResultScrim({
+    super.key,
     required this.title,
     required this.subtitle,
     required this.primaryLabel,
@@ -444,48 +500,58 @@ class _ResultScrim extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: Colors.black.withValues(alpha: 0.72),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppTheme.card,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      title,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Color(0xFF5D4037),
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
+    return BackdropFilter(
+      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+      child: ColoredBox(
+        color: Colors.black.withValues(alpha: 0.55),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.card,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.28),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        color: Color(0xFF6D4C41),
-                        fontWeight: FontWeight.w700,
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Color(0xFF5D4037),
+                          fontSize: 28,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      Text(
+                        subtitle,
+                        style: const TextStyle(
+                          color: Color(0xFF6D4C41),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
-              GameButton(label: primaryLabel, onPressed: onPrimary),
-              const SizedBox(height: 12),
-              GameButton(label: 'Home', onPressed: onHome, primary: false),
-            ],
+                const SizedBox(height: 24),
+                GameButton(label: primaryLabel, onPressed: onPrimary),
+                const SizedBox(height: 12),
+                GameButton(label: 'Home', onPressed: onHome, primary: false),
+              ],
+            ),
           ),
         ),
       ),

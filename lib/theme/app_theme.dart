@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:puzzle_match/ui/motion.dart';
 
 class AppTheme {
   static const background = Color(0xFF2C2C2C);
@@ -31,6 +32,13 @@ class AppTheme {
       ),
       snackBarTheme: const SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitionsBuilder(),
+          TargetPlatform.iOS: AppPageTransitionsBuilder(),
+          TargetPlatform.macOS: AppPageTransitionsBuilder(),
+        },
       ),
     );
   }
