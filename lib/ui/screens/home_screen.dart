@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:puzzle_match/models/puzzle_image_ref.dart';
 import 'package:puzzle_match/state/app_controller.dart';
 import 'package:puzzle_match/theme/app_theme.dart';
 import 'package:puzzle_match/ui/screens/game_screen.dart';
@@ -82,7 +81,7 @@ class HomeScreen extends StatelessWidget {
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: PuzzleThumb(
-                                image: PuzzleImageRef.builtin(0),
+                                image: app.config.stage(1, 1).images.first,
                                 repository: app.images,
                               ),
                             ),

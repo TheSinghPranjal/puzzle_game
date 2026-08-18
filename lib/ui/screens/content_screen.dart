@@ -99,14 +99,16 @@ class _ContentScreenState extends State<ContentScreen> {
                       Positioned(
                         right: 0,
                         top: 0,
-                        child: IconButton(
-                          onPressed: () => app.removeImageFromStage(
-                            _level,
-                            _stage,
-                            image,
-                          ),
-                          icon: const Icon(Icons.delete_rounded, size: 20),
-                        ),
+                        child: image.isBundled
+                            ? const SizedBox.shrink()
+                            : IconButton(
+                                onPressed: () => app.removeImageFromStage(
+                                  _level,
+                                  _stage,
+                                  image,
+                                ),
+                                icon: const Icon(Icons.delete_rounded, size: 20),
+                              ),
                       ),
                     ],
                   ),
@@ -143,7 +145,7 @@ class _ContentScreenState extends State<ContentScreen> {
           ),
           const SizedBox(height: 16),
           const Text(
-            'PNG, JPG, or WebP. Maximum 5 images per stage. One is chosen at random each attempt.',
+            'Bundled images use names like 1of5level1. You can also add up to 5 images per stage. One is chosen at random each attempt.',
             style: TextStyle(color: AppTheme.textMuted),
           ),
         ],
