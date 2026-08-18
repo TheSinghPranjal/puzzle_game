@@ -103,11 +103,12 @@ class BuiltinImageGenerator {
     final shader = ui.Gradient.linear(
       Offset(0, size.height * 0.1),
       Offset(size.width, size.height * 0.55),
-      [
-        const Color(0x6640F0C0),
-        const Color(0x668B5CF6),
-        const Color(0x3300D4FF),
+      const [
+        Color(0x6640F0C0),
+        Color(0x668B5CF6),
+        Color(0x3300D4FF),
       ],
+      const [0.0, 0.5, 1.0],
     );
     canvas.drawRect(Offset.zero & size, Paint()..shader = shader);
     _hills(canvas, size, const [Color(0xFF0B1C22), Color(0xFF16333C)]);

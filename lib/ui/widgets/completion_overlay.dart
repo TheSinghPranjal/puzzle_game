@@ -4,7 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:puzzle_match/ui/motion.dart';
 
-class CompletionOverlay extends StatelessWidget {
+class CompletionOverlay extends StatefulWidget {
   const CompletionOverlay({
     super.key,
     required this.image,
@@ -28,62 +28,182 @@ class CompletionOverlay extends StatelessWidget {
   final VoidCallback onHome;
   final VoidCallback onBack;
 
-  static const cream = Color(0xFFFFF3D6);
-  static const creamDeep = Color(0xFFF6D9A0);
-  static const titleBrown = Color(0xFF4A2A12);
-  static const rewardFill = Color(0xFFF4DCB0);
-  static const gold = Color(0xFFFFC107);
-  static const goldDeep = Color(0xFFE65100);
-  static const nextTop = Color(0xFFFFC107);
-  static const nextMid = Color(0xFFFF9800);
-  static const nextBottom = Color(0xFFEF6C00);
+  @override
+  State<CompletionOverlay> createState() => _CompletionOverlayState();
+}
+
+class _CompletionOverlayState extends State<CompletionOverlay>
+    with TickerProviderStateMixin {
+  late final AnimationController _enter;
+  late final AnimationController _confetti;
+  late final Animation<double> _dim;
+  late final Animation<double> _card;
+  late final Animation<double> _next;
+  late final Animation<double> _home;
+  late final Animation<double> _hint;
+
+  @override
+  void initState() {
+    super.initState();
+    _enter = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 780),
+    );
+    _confetti = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
+    _dim = CurvedAnimation(
+      parent: _enter,
+      curve: const Interval(0, 0.32, curve: Curves.easeOut),
+    );
+    _card = CurvedAnimation(
+      parent: _enter,
+      curve: const Interval(0.08, 0.58, curve: Curves.easeOutBack),
+    );
+    _next = CurvedAnimation(
+      parent: _enter,
+      curve: const Interval(0.32, 0.76, curve: Curves.easeOutCubic),
+    );
+    _home = CurvedAnimation(
+      parent: _enter,
+      curve: const Interval(0.42, 0.88, curve: Curves.easeOutCubic),
+    );
+    _hint = CurvedAnimation(
+      parent: _enter,
+      curve: const Interval(0.52, 1, curve: Curves.easeOut),
+    );
+    _enter.forward();
+  }
+
+  @override
+  void dispose() {
+    _enter.dispose();
+    _confetti.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final seconds = remaining.inSeconds.clamp(0, 9999);
+    final seconds = widget.remaining.inSeconds.clamp(0, 9999);
     final mm = (seconds ~/ 60).toString().padLeft(2, '0');
     final ss = (seconds % 60).toString().padLeft(2, '0');
-    final title = levelComplete ? 'LEVEL COMPLETE!' : 'STAGE COMPLETE!';
-    final nextLabel = levelComplete ? 'NEXT LEVEL' : 'NEXT STAGE';
+    final title = widget.levelComplete ? 'LEVEL COMPLETE!' : 'STAGE COMPLETE!';
+    final nextLabel = widget.levelComplete ? 'NEXT LEVEL' : 'NEXT STAGE';
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        RawImage(image: image, fit: BoxFit.cover, filterQuality: FilterQuality.high),
-        const ColoredBox(color: Color(0x8A000000)),
-        const IgnorePointer(child: _ConfettiLayer()),
+        RawImage(
+          image: widget.image,
+          fit: BoxFit.cover,
+          filterQuality: FilterQuality.high,
+        ),
+        FadeTransition(
+          opacity: _dim,
+          child: const ColoredBox(color: Color(0x59000000)),
+        ),
+        IgnorePointer(
+          child: AnimatedBuilder(
+            animation: _confetti,
+            builder: (context, _) => CustomPaint(
+              painter: _ConfettiPainter(_confetti.value),
+              size: Size.infinite,
+            ),
+          ),
+        ),
         SafeArea(
           child: Column(
             children: [
               _CompleteHeader(
-                level: level,
-                stage: stage,
+                level: widget.level,
+                stage: widget.stage,
                 time: '$mm:$ss',
-                onBack: onBack,
+                onBack: widget.onBack,
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(28, 12, 28, 8),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 28),
-                      _CompleteCard(title: title),
-                      const SizedBox(height: 22),
-                      _GradientActionButton(
-                        label: nextLabel,
-                        onPressed: onNext,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(28, 8, 28, 8),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight - 16,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _FadeScale(
+                              animation: _card,
+                              child: _CompleteCard(title: title),
+                            ),
+                            const SizedBox(height: 22),
+                            _FadeSlide(
+                              animation: _next,
+                              child: _GradientActionButton(
+                                label: nextLabel,
+                                onPressed: widget.onNext,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            _FadeSlide(
+                              animation: _home,
+                              child: _HomeActionButton(onPressed: widget.onHome),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      _HomeActionButton(onPressed: onHome),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ),
-              _CompleteHint(hints: hints),
+              FadeTransition(
+                opacity: _hint,
+                child: _CompleteHint(hints: widget.hints),
+              ),
             ],
           ),
         ),
       ],
+    );
+  }
+}
+
+class _FadeScale extends StatelessWidget {
+  const _FadeScale({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animation,
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 0.84, end: 1).animate(animation),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _FadeSlide extends StatelessWidget {
+  const _FadeSlide({required this.animation, required this.child});
+
+  final Animation<double> animation;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.22),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
     );
   }
 }
@@ -164,22 +284,15 @@ class _CompleteCard extends StatelessWidget {
       children: [
         Container(
           width: double.infinity,
-          margin: const EdgeInsets.only(top: 48),
-          padding: const EdgeInsets.fromLTRB(18, 58, 18, 22),
+          margin: const EdgeInsets.only(top: 44),
+          padding: const EdgeInsets.fromLTRB(18, 56, 18, 20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(28),
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFFFF6DD),
-                Color(0xFFF8DC9E),
-              ],
-            ),
+            color: const Color(0xFFFFF3D6),
+            borderRadius: BorderRadius.circular(32),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.38),
-                blurRadius: 22,
+                color: Colors.black.withValues(alpha: 0.32),
+                blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
             ],
@@ -190,11 +303,10 @@ class _CompleteCard extends StatelessWidget {
                 title,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  fontFamily: 'serif',
                   color: Color(0xFF4A2A12),
                   fontSize: 26,
                   fontWeight: FontWeight.w900,
-                  letterSpacing: 0.4,
+                  letterSpacing: 0.6,
                   height: 1.1,
                 ),
               ),
@@ -219,18 +331,14 @@ class _StarDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
-        Expanded(
-          child: Container(height: 1.2, color: const Color(0xFF8D6E4A)),
-        ),
-        const Padding(
+        Expanded(child: Divider(height: 1, thickness: 1.2, color: Color(0xFF8D6E4A))),
+        Padding(
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: Icon(Icons.star_rounded, size: 14, color: Color(0xFF6D4C41)),
         ),
-        Expanded(
-          child: Container(height: 1.2, color: const Color(0xFF8D6E4A)),
-        ),
+        Expanded(child: Divider(height: 1, thickness: 1.2, color: Color(0xFF8D6E4A))),
       ],
     );
   }
@@ -250,7 +358,7 @@ class _RewardRow extends StatelessWidget {
       child: const Row(
         children: [
           Expanded(
-              child: _RewardItem(
+            child: _RewardItem(
               icon: _CoinGlyph(),
               value: '+100',
               label: 'Coins',
@@ -379,65 +487,32 @@ class _MedalBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 148,
-      height: 104,
+    return const SizedBox(
+      width: 168,
+      height: 112,
       child: CustomPaint(painter: _MedalPainter()),
     );
   }
 }
 
 class _MedalPainter extends CustomPainter {
+  const _MedalPainter();
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height * 0.58);
     canvas.drawCircle(
       center,
-      52,
+      58,
       Paint()
         ..shader = ui.Gradient.radial(
           center,
-          56,
-          [const Color(0xCCFFFFFF), const Color(0x00FFFFFF)],
+          58,
+          [const Color(0xE6FFFFFF), const Color(0x00FFFFFF)],
         ),
     );
     _laurel(canvas, center, true);
     _laurel(canvas, center, false);
-    canvas.drawCircle(
-      center,
-      30,
-      Paint()
-        ..shader = ui.Gradient.linear(
-          center.translate(-16, -16),
-          center.translate(18, 20),
-          const [Color(0xFFFFF59D), Color(0xFFFFC107), Color(0xFFF57F17)],
-        ),
-    );
-    canvas.drawCircle(
-      center,
-      30,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3
-        ..color = const Color(0xFFFFECB3),
-    );
-    final star = Path();
-    const r = 13.0;
-    const inner = 5.5;
-    for (var i = 0; i < 5; i++) {
-      final outerA = -pi / 2 + i * 2 * pi / 5;
-      final innerA = outerA + pi / 5;
-      final op = center + Offset(cos(outerA) * r, sin(outerA) * r);
-      final ip = center + Offset(cos(innerA) * inner, sin(innerA) * inner);
-      if (i == 0) {
-        star.moveTo(op.dx, op.dy);
-      } else {
-        star.lineTo(op.dx, op.dy);
-      }
-      star.lineTo(ip.dx, ip.dy);
-    }
-    star.close();
-    canvas.drawPath(star, Paint()..color = const Color(0xFF8D6E00));
   }
 
   void _laurel(Canvas canvas, Offset center, bool left) {
@@ -448,23 +523,24 @@ class _MedalPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     final dir = left ? -1.0 : 1.0;
     final path = Path()
-      ..moveTo(center.dx + dir * 34, center.dy + 18)
+      ..moveTo(center.dx + dir * 34, center.dy + 20)
       ..quadraticBezierTo(
-        center.dx + dir * 58,
+        center.dx + dir * 62,
         center.dy,
-        center.dx + dir * 36,
-        center.dy - 28,
+        center.dx + dir * 34,
+        center.dy - 32,
       );
     canvas.drawPath(path, paint);
-    for (var i = 0; i < 5; i++) {
-      final t = 0.15 + i * 0.18;
+    for (var i = 0; i < 6; i++) {
+      final t = 0.12 + i * 0.15;
       final p = Offset(
-        center.dx + dir * (34 + 10 * sin(t * pi)),
-        center.dy + 18 - t * 46,
+        center.dx + dir * (34 + 12 * sin(t * pi)),
+        center.dy + 20 - t * 52,
       );
       canvas.drawOval(
-        Rect.fromCenter(center: p, width: 10, height: 6),
-        Paint()..color = Color.lerp(const Color(0xFFFFE082), const Color(0xFFFF8F00), i / 5)!,
+        Rect.fromCenter(center: p, width: 11, height: 6.5),
+        Paint()
+          ..color = Color.lerp(const Color(0xFFFFE082), const Color(0xFFFF8F00), i / 6)!,
       );
     }
   }
@@ -501,7 +577,7 @@ class _GradientActionButton extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF5D2C00).withValues(alpha: 0.55),
+                color: const Color(0xFF5D2C00).withValues(alpha: 0.5),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),
@@ -521,7 +597,7 @@ class _GradientActionButton extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        Colors.white.withValues(alpha: 0.38),
+                        Colors.white.withValues(alpha: 0.4),
                         Colors.white.withValues(alpha: 0),
                       ],
                     ),
@@ -529,34 +605,33 @@ class _GradientActionButton extends StatelessWidget {
                 ),
               ),
               Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      label,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 18,
-                        letterSpacing: 0.8,
-                      ),
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white,
                     ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white.withValues(alpha: 0.22),
-                        border: Border.all(color: Colors.white, width: 1.4),
-                      ),
-                      child: const Icon(
-                        Icons.chevron_right_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+                    child: const Icon(
+                      Icons.chevron_right_rounded,
+                      color: Color(0xFFFFB300),
+                      size: 22,
                     ),
-                  ],
+                  ),
                 ),
               ),
             ],
@@ -586,7 +661,7 @@ class _HomeActionButton extends StatelessWidget {
             border: Border.all(color: const Color(0xFFFFC107), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.5),
+                color: Colors.black.withValues(alpha: 0.45),
                 blurRadius: 14,
                 offset: const Offset(0, 8),
               ),
@@ -671,17 +746,10 @@ class _CompleteHint extends StatelessWidget {
   }
 }
 
-class _ConfettiLayer extends StatelessWidget {
-  const _ConfettiLayer();
-
-  @override
-  Widget build(BuildContext context) {
-    return const CustomPaint(painter: _ConfettiPainter(), size: Size.infinite);
-  }
-}
-
 class _ConfettiPainter extends CustomPainter {
-  const _ConfettiPainter();
+  const _ConfettiPainter(this.t);
+
+  final double t;
 
   static const colors = [
     Color(0xFF4FC3F7),
@@ -694,12 +762,16 @@ class _ConfettiPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (size.isEmpty) return;
     final rng = Random(18);
-    for (var i = 0; i < 46; i++) {
-      final origin = Offset(rng.nextDouble() * size.width, rng.nextDouble() * size.height);
+    for (var i = 0; i < 52; i++) {
+      final speed = 0.35 + rng.nextDouble() * 0.9;
+      final x = rng.nextDouble() * size.width;
+      final start = rng.nextDouble();
+      final y = ((start + t * speed) % 1.0) * (size.height + 28) - 14;
       canvas.save();
-      canvas.translate(origin.dx, origin.dy);
-      canvas.rotate(rng.nextDouble() * pi);
+      canvas.translate(x, y);
+      canvas.rotate((rng.nextDouble() + t) * pi);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
           Rect.fromCenter(
@@ -707,14 +779,14 @@ class _ConfettiPainter extends CustomPainter {
             width: 6 + rng.nextDouble() * 10,
             height: 3 + rng.nextDouble() * 5,
           ),
-          const Radius.circular(1),
+          const Radius.circular(1.2),
         ),
-        Paint()..color = colors[i % colors.length].withValues(alpha: 0.9),
+        Paint()..color = colors[i % colors.length].withValues(alpha: 0.92),
       );
       canvas.restore();
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ConfettiPainter oldDelegate) => oldDelegate.t != t;
 }
