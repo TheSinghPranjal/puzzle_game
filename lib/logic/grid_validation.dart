@@ -4,13 +4,13 @@ class GridValidation {
   static const int maxImagesPerStage = 5;
   static const int minImagesPerStage = 1;
 
-  /// Portrait-compatible grids are square, or have one extra column so tiles
-  /// stay tall when the source image is portrait.
+  /// Portrait-compatible grids are square, or one extra row so the board
+  /// stays taller than it is wide (for example 3×2).
   static bool isPortraitCompatible(int rows, int columns) {
     if (rows < minSize || columns < minSize) return false;
     if (rows > maxSize || columns > maxSize) return false;
-    if (columns < rows) return false;
-    if (columns > rows + 1) return false;
+    if (rows < columns) return false;
+    if (rows > columns + 1) return false;
     return true;
   }
 
@@ -22,7 +22,7 @@ class GridValidation {
       return 'Maximum grid size is $maxSize × $maxSize.';
     }
     if (!isPortraitCompatible(rows, columns)) {
-      return 'Grid must be square or portrait (rows × columns, columns = rows or rows + 1).';
+      return 'Grid must be square or portrait (rows × columns, rows = columns or columns + 1).';
     }
     return null;
   }
