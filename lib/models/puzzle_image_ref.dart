@@ -16,6 +16,7 @@ class PuzzleImageRef {
   final int? builtinIndex;
 
   bool get isBundled => kind == PuzzleImageKind.asset;
+  bool get isGenerated => kind == PuzzleImageKind.builtin;
 
   factory PuzzleImageRef.builtin(int index) {
     return PuzzleImageRef(

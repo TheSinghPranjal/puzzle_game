@@ -88,7 +88,6 @@ class GameConfig {
   static const int stagesPerLevel = 2;
   static const int minTimerSeconds = 60;
   static const int maxTimerSeconds = 120;
-  static const int builtinImageCount = 10;
 
   int get levelCount => levels.length;
 
@@ -146,29 +145,40 @@ class GameConfig {
     return scaled;
   }
 
-  static List<PuzzleImageRef> defaultImagesFor(int levelNumber, int stageNumber) {
-    final first = ((levelNumber - 1) * stagesPerLevel + (stageNumber - 1)) %
-        builtinImageCount;
-    final second = (first + 3) % builtinImageCount;
-    return [
-      PuzzleImageRef.builtin(first),
-      PuzzleImageRef.builtin(second),
-    ];
-  }
-
-  /// Builds 2×2, 2×3, 3×3, 3×4, … up to 15×15. Two stages per level.
+  /// Builds 2×2, 3×2, 3×3, 4×3, … up to 15×15. Two stages per level.
   factory GameConfig.standard() {
     final levels = <LevelConfig>[];
     var levelNumber = 1;
-    for (var rows = 2; rows <= GridValidation.maxSize; rows++) {
-      levels.add(_level(levelNumber, rows, rows));
+    for (var size = 2; size <= GridValidation.maxSize; size++) {
+      levels.add(_level(levelNumber, size, size));
       levelNumber++;
-      if (rows < GridValidation.maxSize) {
-        levels.add(_level(levelNumber, rows, rows + 1));
+      if (size < GridValidation.maxSize) {
+        levels.add(_level(levelNumber, size + 1, size));
         levelNumber++;
       }
     }
     return GameConfig(levels: levels);
+  }
+
+  /// Keeps saved images but restores rows, columns, and timers from [standard].
+  static GameConfig withStandardLayouts(GameConfig saved) {
+    final standard = GameConfig.standard();
+    var result = saved;
+    for (final level in standard.levels) {
+      if (!saved.hasLevel(level.levelNumber)) continue;
+      for (final stage in level.stages) {
+        final current = saved.stage(level.levelNumber, stage.stageNumber);
+        result = result.replacingStage(
+          level.levelNumber,
+          current.copyWith(
+            rows: stage.rows,
+            columns: stage.columns,
+            timerSeconds: stage.timerSeconds,
+          ),
+        );
+      }
+    }
+    return result;
   }
 
   static LevelConfig _level(int levelNumber, int rows, int columns) {
@@ -182,7 +192,7 @@ class GameConfig {
             rows: rows,
             columns: columns,
             timerSeconds: timer,
-            images: defaultImagesFor(levelNumber, stageNumber),
+            images: const [],
           ),
       ],
     );
