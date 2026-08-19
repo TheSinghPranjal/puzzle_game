@@ -36,19 +36,46 @@ class PuzzleAssetCatalog {
   }
 
   static Future<Map<int, List<PuzzleImageRef>>> loadFromBundle() async {
-    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     final byLevel = <int, List<(int slot, PuzzleImageRef image)>>{};
+
+    void add(PuzzleAssetName parsed, String path) {
+      final current = byLevel.putIfAbsent(parsed.level, () => []);
+      if (current.any((item) => item.$2.id == parsed.id)) return;
+      current.add((
+        parsed.slot,
+        PuzzleImageRef.asset(id: parsed.id, assetPath: path),
+      ));
+    }
+
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
     for (final key in manifest.listAssets()) {
-      if (!key.startsWith('$directory/')) continue;
+      if (!key.contains('$directory/')) continue;
       final filename = key.split('/').last;
       final parsed = parse(filename);
       if (parsed == null) continue;
-      byLevel.putIfAbsent(parsed.level, () => []);
-      byLevel[parsed.level]!.add((
-        parsed.slot,
-        PuzzleImageRef.asset(id: parsed.id, assetPath: key),
-      ));
+      add(parsed, key);
     }
+
+    // AssetManifest can lag until a full rebuild. Probe sequential levels so
+    // files like 1of5level2.png still attach to the 3×2 board.
+    for (var level = 1; level <= GridValidation.maxSize * 2; level++) {
+      var foundOnLevel = byLevel.containsKey(level);
+      for (var slot = 1; slot <= GridValidation.maxImagesPerStage; slot++) {
+        final id = '${slot}of5level$level';
+        if (byLevel[level]?.any((item) => item.$2.id == id) == true) {
+          foundOnLevel = true;
+          continue;
+        }
+        final path = '$directory/$id.png';
+        try {
+          await rootBundle.load(path);
+          add(parse('$id.png')!, path);
+          foundOnLevel = true;
+        } catch (_) {}
+      }
+      if (!foundOnLevel && level > 1) break;
+    }
+
     return {
       for (final entry in byLevel.entries)
         entry.key: [
@@ -59,30 +86,65 @@ class PuzzleAssetCatalog {
   }
 
   /// Puts bundled `{n}of5level{L}` images into both stages of that level.
-  /// User-uploaded files are kept; generated placeholders are replaced.
+  /// Also attaches them to any stage with that level's grid (for example
+  /// `*of5level2` always fills 3×2). User-uploaded files are kept.
+  /// Generated placeholders are never kept once a stage has real images.
   static GameConfig apply(
     GameConfig config,
     Map<int, List<PuzzleImageRef>> byLevel,
   ) {
-    var result = config;
-    for (final level in config.levels) {
+    final imagesForGrid = <(int, int), List<PuzzleImageRef>>{};
+    for (final level in GameConfig.standard().levels) {
       final bundled = byLevel[level.levelNumber];
       if (bundled == null || bundled.isEmpty) continue;
+      final stage = level.stages.first;
+      imagesForGrid[(stage.rows, stage.columns)] = bundled;
+    }
+
+    var result = config;
+    for (final level in config.levels) {
       for (final stage in level.stages) {
-        final merged = <String, PuzzleImageRef>{
-          for (final image in bundled) image.id: image,
-        };
-        for (final image in stage.images) {
-          if (image.kind != PuzzleImageKind.file) continue;
-          if (merged.length >= GridValidation.maxImagesPerStage) break;
-          merged.putIfAbsent(image.id, () => image);
-        }
+        final fromLevel = byLevel[level.levelNumber] ?? const <PuzzleImageRef>[];
+        final fromGrid =
+            imagesForGrid[(stage.rows, stage.columns)] ?? const <PuzzleImageRef>[];
+        final bundled = fromLevel.isNotEmpty ? fromLevel : fromGrid;
         result = result.replacingStage(
           level.levelNumber,
-          stage.copyWith(images: merged.values.toList()),
+          stage.copyWith(
+            images: _mergeStageImages(bundled: bundled, existing: stage.images),
+          ),
         );
       }
     }
     return result;
+  }
+
+  static List<PuzzleImageRef> withoutGenerated(List<PuzzleImageRef> images) {
+    return [
+      for (final image in images)
+        if (!image.isGenerated) image,
+    ];
+  }
+
+  static List<PuzzleImageRef> _mergeStageImages({
+    required List<PuzzleImageRef> bundled,
+    required List<PuzzleImageRef> existing,
+  }) {
+    final merged = <String, PuzzleImageRef>{
+      for (final image in bundled) image.id: image,
+    };
+    for (final image in existing) {
+      if (image.isGenerated) continue;
+      if (merged.containsKey(image.id)) continue;
+      if (merged.length >= GridValidation.maxImagesPerStage) break;
+      if (image.kind == PuzzleImageKind.file) {
+        merged[image.id] = image;
+        continue;
+      }
+      if (image.kind == PuzzleImageKind.asset && bundled.isEmpty) {
+        merged[image.id] = image;
+      }
+    }
+    return merged.values.toList();
   }
 }
