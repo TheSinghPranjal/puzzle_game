@@ -17,8 +17,8 @@ void main() {
       expect(config.levels.first.levelNumber, 1);
       expect(config.stage(1, 1).rows, 2);
       expect(config.stage(1, 1).columns, 2);
-      expect(config.stage(2, 1).rows, 2);
-      expect(config.stage(2, 1).columns, 3);
+      expect(config.stage(2, 1).rows, 3);
+      expect(config.stage(2, 1).columns, 2);
       expect(config.stage(3, 1).rows, 3);
       expect(config.stage(3, 1).columns, 3);
       final last = config.levels.last;
@@ -35,10 +35,10 @@ void main() {
       }
     });
 
-    test('every stage has a default image pool of 1–5 images', () {
+    test('stages start with no generated fallback images', () {
       for (final level in config.levels) {
         for (final stage in level.stages) {
-          expect(stage.images.length, inInclusiveRange(1, 5));
+          expect(stage.images, isEmpty);
         }
       }
     });
@@ -47,12 +47,12 @@ void main() {
   group('GridValidation', () {
     test('accepts square and portrait grids', () {
       expect(GridValidation.isPortraitCompatible(2, 2), isTrue);
-      expect(GridValidation.isPortraitCompatible(2, 3), isTrue);
+      expect(GridValidation.isPortraitCompatible(3, 2), isTrue);
       expect(GridValidation.isPortraitCompatible(15, 15), isTrue);
     });
 
     test('rejects landscape and out-of-range grids', () {
-      expect(GridValidation.isPortraitCompatible(3, 2), isFalse);
+      expect(GridValidation.isPortraitCompatible(2, 3), isFalse);
       expect(GridValidation.isPortraitCompatible(4, 6), isFalse);
       expect(GridValidation.isPortraitCompatible(1, 1), isFalse);
       expect(GridValidation.isPortraitCompatible(16, 16), isFalse);
