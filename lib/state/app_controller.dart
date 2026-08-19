@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:puzzle_match/logic/grid_validation.dart';
 import 'package:puzzle_match/logic/puzzle_engine.dart';
 import 'package:puzzle_match/logic/reward_service.dart';
+import 'package:puzzle_match/logic/session_image_picker.dart';
 import 'package:puzzle_match/logic/timer_controller.dart';
 import 'package:puzzle_match/models/profile.dart';
 import 'package:puzzle_match/models/puzzle_asset_catalog.dart';
@@ -21,15 +22,18 @@ class AppController extends ChangeNotifier {
     ImageRepository? images,
     RewardService rewardService = const RewardService(),
     Random? random,
+    SessionImagePicker? sessionImages,
   }) : _storage = storage ?? StorageService(),
        images = images ?? ImageRepository(),
        _rewards = rewardService,
-       _random = random ?? Random();
+       _random = random ?? Random(),
+       _sessionImages = sessionImages ?? SessionImagePicker();
 
   final StorageService _storage;
   final ImageRepository images;
   final RewardService _rewards;
   final Random _random;
+  final SessionImagePicker _sessionImages;
   final ImagePicker _picker = ImagePicker();
 
   bool ready = false;
@@ -68,7 +72,7 @@ class AppController extends ChangeNotifier {
   Future<void> load() async {
     final data = await _storage.load();
     config = PuzzleAssetCatalog.apply(
-      data.config,
+      GameConfig.withStandardLayouts(data.config),
       await PuzzleAssetCatalog.loadFromBundle(),
     );
     profiles = data.profiles;
@@ -81,16 +85,30 @@ class AppController extends ChangeNotifier {
     debugMode = data.debugMode;
     darkMode = data.darkMode;
     ready = true;
+    await _storage.save(
+      PersistedAppData(
+        selectedProfileId: selectedProfileId,
+        profiles: profiles,
+        config: config,
+        soundEnabled: soundEnabled,
+        musicEnabled: musicEnabled,
+        debugMode: debugMode,
+        darkMode: darkMode,
+        activeSnapshot: data.activeSnapshot,
+      ),
+    );
     notifyListeners();
   }
 
   Future<void> selectProfile(String id) async {
     selectedProfileId = id;
+    _sessionImages.reset();
     await _persist();
     notifyListeners();
   }
 
   Future<String?> startNewGame() {
+    _sessionImages.reset();
     return startStage(1, 1);
   }
 
@@ -101,13 +119,14 @@ class AppController extends ChangeNotifier {
   Future<String?> startStage(int level, int stage) async {
     lastError = null;
     final stageConfig = config.stage(level, stage);
-    if (stageConfig.images.isEmpty) {
+    final playable = PuzzleAssetCatalog.withoutGenerated(stageConfig.images);
+    if (playable.isEmpty) {
       lastError = 'This stage has no images. Add one in Settings.';
       notifyListeners();
       return lastError;
     }
 
-    final picked = await _pickPlayableImage(stageConfig.images);
+    final picked = await _pickPlayableImage(level, stage, playable);
     if (picked == null) {
       lastError = 'No valid image could be loaded for this stage.';
       notifyListeners();
@@ -283,7 +302,9 @@ class AppController extends ChangeNotifier {
     if (picked == null) return null;
     try {
       final imported = await images.importPickedFile(picked.path);
-      final updated = current.copyWith(images: [...current.images, imported]);
+      final updated = current.copyWith(
+        images: [...PuzzleAssetCatalog.withoutGenerated(current.images), imported],
+      );
       config = config.replacingStage(level, updated);
       await _persist();
       notifyListeners();
@@ -413,15 +434,26 @@ class AppController extends ChangeNotifier {
   }
 
   Future<({PuzzleImageRef ref, ui.Image image})?> _pickPlayableImage(
+    int level,
+    int stage,
     List<PuzzleImageRef> pool,
   ) async {
-    final shuffled = [...pool]..shuffle(_random);
-    for (final ref in shuffled) {
+    final remaining = [
+      for (final ref in pool)
+        if (!ref.isGenerated) ref,
+    ];
+    while (remaining.isNotEmpty) {
+      final ref = _sessionImages.next(
+        level: level,
+        stage: stage,
+        pool: remaining,
+        random: _random,
+      );
       try {
         final image = await images.resolve(ref);
         return (ref: ref, image: image);
       } catch (_) {
-        continue;
+        remaining.removeWhere((item) => item.id == ref.id);
       }
     }
     return null;
