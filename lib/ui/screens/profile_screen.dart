@@ -89,6 +89,7 @@ class ProfileScreen extends StatelessWidget {
                       const SizedBox(height: 22),
                       _SummaryCard(profile: selected),
                     ],
+
                   ),
                 ),
                 const Padding(
