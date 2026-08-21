@@ -79,6 +79,7 @@ class ProfileScreen extends StatelessWidget {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                     children: [
+
                       const _ChooseHeader(),
                       const SizedBox(height: 16),
                       _AvatarGrid(
