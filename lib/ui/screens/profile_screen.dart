@@ -90,6 +90,7 @@ class ProfileScreen extends StatelessWidget {
                       _SummaryCard(profile: selected),
                     ],
 
+
                   ),
                 ),
                 const Padding(
